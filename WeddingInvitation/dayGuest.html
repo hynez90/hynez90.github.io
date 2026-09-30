@@ -23,58 +23,76 @@ body {
     background: transparent;
 }
 
-.scene {
+/*
+ * The actual visible browser viewport.
+ *
+ * dvh = dynamic viewport height.
+ * This is important on phones because
+ * the browser address bar changes the
+ * usable viewport height.
+ */
+#stage {
     position: fixed;
 
-    top: 0;
-    left: 0;
+    inset: 0;
 
     width: 100vw;
-    height: 100vh;
+    height: 100dvh;
 
-    display: flex;
+    display: grid;
+    place-items: center;
 
-    justify-content: center;
-    align-items: center;
-
-    perspective: 2000px;
-}
-
-.card {
-    position: relative;
-
-    /*
-     * Use the full available height.
-     * A4 ratio is preserved automatically.
-     */
-    height: 100vh;
-    width: auto;
-
-    aspect-ratio: 210 / 297;
-
-    transform-style: preserve-3d;
-
-    cursor: pointer;
-
-    transition:
-        transform 1.5s cubic-bezier(.65, .05, .36, 1);
-}
-
-.face {
-    position: absolute;
-
-    top: 0;
-    left: 0;
-
-    width: 100%;
-    height: 100%;
-
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
+    perspective: 1800px;
 
     overflow: hidden;
 }
 
+/*
+ * A4 portrait card
+ *
+ * 210 / 297 = 0.70707
+ */
+#card {
+    position: relative;
+
+    width: min(100vw, calc(100dvh * 0.70707));
+    height: min(100dvh, calc(100vw * 1.41414));
+
+    aspect-ratio: 210 / 297;
+
+    margin: 0;
+
+    transform-style: preserve-3d;
+
+    transition:
+        transform 1.4s cubic-bezier(.65, .05, .36, 1);
+
+    cursor: pointer;
+}
+
+/*
+ * Both sides of invitation
+ */
+.face {
+    position: absolute;
+
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
+    margin: 0;
+    padding: 0;
+
+    overflow: hidden;
+
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}
+
+/*
+ * Your actual SVG
+ */
 .face img {
     display: block;
 
@@ -84,46 +102,40 @@ body {
     margin: 0;
     padding: 0;
 
-    /*
-     * Do NOT crop the invitation.
-     */
     object-fit: fill;
 }
 
+/*
+ * Front
+ */
 .front {
     transform: rotateY(0deg);
 }
 
+/*
+ * Back
+ */
 .back {
     transform: rotateY(180deg);
 }
 
-.card.open {
+/*
+ * Open
+ */
+#card.open {
     transform: rotateY(180deg);
 }
 
 /*
- * On very narrow screens, constrain by width
+ * Tap instruction
  */
-@media (max-aspect-ratio: 210/297) {
-
-    .card {
-        width: 100vw;
-        height: auto;
-
-        aspect-ratio: 210 / 297;
-    }
-
-}
-
-.instruction {
+#instruction {
     position: fixed;
 
     left: 0;
-    right: 0;
-    top: 20px;
-      bottom: 20px;
+    bottom: max(16px, env(safe-area-inset-bottom));
 
+    width: 100%;
 
     text-align: center;
 
@@ -135,17 +147,61 @@ body {
 
     letter-spacing: .12em;
 
-    pointer-events: none;
-
     text-shadow:
-        0 1px 5px rgba(0,0,0,.6);
+        0 1px 5px rgba(0,0,0,.7);
+
+    pointer-events: none;
 
     transition: opacity .5s ease;
 }
 
-.card.open ~ .instruction {
+#card.open ~ #instruction {
     opacity: 0;
 }
+
+
+/*
+ * Older browsers that don't understand dvh
+ */
+@supports not (height: 100dvh) {
+
+    #stage {
+        height: 100vh;
+    }
+
+    #card {
+        width: min(100vw, 70.707vh);
+        height: min(100vh, 141.414vw);
+    }
+
+}
+
+
+/*
+ * Phones in portrait orientation
+ */
+@media (orientation: portrait) {
+
+    #card {
+        height: min(100dvh, 141.414vw);
+        width: calc(min(100dvh, 141.414vw) * 0.70707);
+    }
+
+}
+
+
+/*
+ * Phones in landscape orientation
+ */
+@media (orientation: landscape) {
+
+    #card {
+        width: min(100vw, 70.707dvh);
+        height: calc(min(100vw, 70.707dvh) * 1.41414);
+    }
+
+}
+
 </style>
 </head>
 
