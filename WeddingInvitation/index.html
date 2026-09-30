@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+  <title>Wedding Invitation</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+    }
+
+    body {
+      background: #eee9e2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      font-family: sans-serif;
+    }
+
+    /*
+      The invitation area.
+      Change max-width if you want the invitation larger/smaller.
+    */
+    .invitation {
+      width: min(92vw, 600px);
+      aspect-ratio: 1 / 1.414;
+      perspective: 1800px;
+      position: relative;
+      touch-action: pan-y;
+    }
+
+    /*
+      The actual card that rotates.
+    */
+    .card {
+      width: 100%;
+      height: 100%;
+      position: relative;
+
+      transform-style: preserve-3d;
+      transform-origin: center center;
+
+      cursor: grab;
+
+      transition:
+        transform 0.75s cubic-bezier(.22,.61,.36,1);
+
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .card.dragging {
+      transition: none;
+      cursor: grabbing;
+    }
+
+    /*
+      Both SVG sides occupy exactly the same space.
+    */
+    .side {
+      position: absolute;
+      inset: 0;
+
+      width: 100%;
+      height: 100%;
+
+      overflow: hidden;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+
+      border-radius: 3px;
+
+      box-shadow:
+        0 20px 50px rgba(0,0,0,.18);
+    }
+
+    .side img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      pointer-events: none;
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+
+    /*
+      FRONT = wedding cover
+    */
+    .front {
+      background: white;
+      transform: rotateY(0deg);
+    }
+
+    /*
+      BACK = venue/details
+
+      It starts rotated 180 degrees so that when the card
+      flips, this side becomes visible.
+    */
+    .back {
+      background: white;
+      transform: rotateY(180deg);
+    }
+
+    /*
+      Small swipe instruction.
+    */
+    .hint {
+      position: fixed;
+      bottom: 22px;
+      left: 50%;
+      transform: translateX(-50%);
+
+      color: rgba(0,0,0,.55);
+      font-size: 13px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+
+      pointer-events: none;
+
+      transition:
+        opacity .5s ease,
+        transform .5s ease;
+    }
+
+    .hint.hidden {
+      opacity: 0;
+      transform: translate(-50%, 10px);
+    }
+
+    /*
+      Optional subtle darkening behind the invitation.
+    */
+    .invitation::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    @media (max-width: 600px) {
+      .invitation {
+        width: 94vw;
+      }
+
+      .hint {
+        bottom: 14px;
+        font-size: 11px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="invitation" id="invitation">
+
+    <div class="card" id="card">
+
+      <!-- FRONT / COVER -->
+      <div class="side front">
+        <img
+          src="cover.svg"
+          alt="Wedding invitation cover"
+          draggable="false"
+        >
+      </div>
+
+      <!-- BACK / VENUE DETAILS -->
+      <div class="side back">
+        <img
+          src="venue.svg"
+          alt="Wedding venue details"
+          draggable="false"
+        >
+      </div>
+
+    </div>
+  </div>
+
+  <div class="hint" id="hint">
+    Swipe to open
+  </div>
+
+
+  <script>
+    const invitation = document.getElementById("invitation");
+    const card = document.getElementById("card");
+    const hint = document.getElementById("hint");
+
+    let startX = 0;
+    let currentRotation = 0;
+    let dragging = false;
+
+    /*
+      Change this to false if you want the card to open
+      only when the user swipes.
+    */
+    const tapToOpen = true;
+
+    /*
+      How far the user has to swipe before the card
+      completes the flip.
+    */
+    const swipeThreshold = 70;
+
+
+    function openCard() {
+      currentRotation = 180;
+
+      card.classList.remove("dragging");
+
+      card.style.transform =
+        `rotateY(${currentRotation}deg)`;
+
+      hint.classList.add("hidden");
+    }
+
+
+    function closeCard() {
+      currentRotation = 0;
+
+      card.classList.remove("dragging");
+
+      card.style.transform =
+        `rotateY(${currentRotation}deg)`;
+
+      hint.classList.remove("hidden");
+    }
+
+
+    /*
+      -------------------------
+      TOUCH
+      -------------------------
+    */
+
+    invitation.addEventListener("touchstart", function(e) {
+
+      if (e.touches.length !== 1) return;
+
+      startX = e.touches[0].clientX;
+
+      dragging = true;
+
+      card.classList.add("dragging");
+
+    }, { passive: true });
+
+
+    invitation.addEventListener("touchmove", function(e) {
+
+      if (!dragging || e.touches.length !== 1) return;
+
+      const x = e.touches[0].clientX;
+
+      const delta = x - startX;
+
+      /*
+        Swipe left opens the invitation.
+        Swipe right closes it.
+      */
+      let rotation = currentRotation - delta * 0.45;
+
+      rotation = Math.max(0, Math.min(180, rotation));
+
+      card.style.transform =
+        `rotateY(${rotation}deg)`;
+
+    }, { passive: true });
+
+
+    invitation.addEventListener("touchend", function(e) {
+
+      if (!dragging) return;
+
+      dragging = false;
+
+      card.classList.remove("dragging");
+
+      const endX = e.changedTouches[0].clientX;
+
+      const delta = endX - startX;
+
+      /*
+        Swipe left = open
+        Swipe right = close
+      */
+      if (delta < -swipeThreshold) {
+        openCard();
+
+      } else if (delta > swipeThreshold) {
+        closeCard();
+
+      } else {
+        /*
+          Not enough movement.
+          Return to whichever side is currently closest.
+        */
+        if (currentRotation >= 90) {
+          openCard();
+        } else {
+          closeCard();
+        }
+      }
+
+    }, { passive: true });
+
+
+    /*
+      -------------------------
+      MOUSE / DESKTOP
+      -------------------------
+    */
+
+    invitation.addEventListener("mousedown", function(e) {
+
+      startX = e.clientX;
+
+      dragging = true;
+
+      card.classList.add("dragging");
+
+      e.preventDefault();
+
+    });
+
+
+    window.addEventListener("mousemove", function(e) {
+
+      if (!dragging) return;
+
+      const delta = e.clientX - startX;
+
+      let rotation = currentRotation - delta * 0.45;
+
+      rotation = Math.max(0, Math.min(180, rotation));
+
+      card.style.transform =
+        `rotateY(${rotation}deg)`;
+
+    });
+
+
+    window.addEventListener("mouseup", function(e) {
+
+      if (!dragging) return;
+
+      dragging = false;
+
+      card.classList.remove("dragging");
+
+      const delta = e.clientX - startX;
+
+      if (delta < -swipeThreshold) {
+        openCard();
+
+      } else if (delta > swipeThreshold) {
+        closeCard();
+
+      } else {
+
+        if (currentRotation >= 90) {
+          openCard();
+        } else {
+          closeCard();
+        }
+
+      }
+
+    });
+
+
+    /*
+      -------------------------
+      TAP / CLICK
+      -------------------------
+    */
+
+    invitation.addEventListener("click", function(e) {
+
+      /*
+        Don't trigger a tap after a drag.
+      */
+      if (Math.abs(e.clientX - startX) > swipeThreshold) {
+        return;
+      }
+
+      if (!tapToOpen) return;
+
+      if (currentRotation === 0) {
+        openCard();
+      } else {
+        closeCard();
+      }
+
+    });
+
+
+    /*
+      Start with the cover facing the user.
+    */
+    card.style.transform = "rotateY(0deg)";
+  </script>
+
+</body>
+</html>
