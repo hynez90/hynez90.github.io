@@ -10,197 +10,187 @@
 
 <style>
 
-html,
-body {
-    margin: 0;
-    padding: 0;
+       * {
+        box-sizing: border-box;
+    }
 
-    width: 100%;
-    height: 100%;
+    html,
+    body {
+        margin: 0;
+        padding: 0;
 
-    overflow: hidden;
+        width: 100%;
+        height: 100%;
 
-    background: transparent;
-}
+        overflow: hidden;
 
-/*
- * The actual visible browser viewport.
- *
- * dvh = dynamic viewport height.
- * This is important on phones because
- * the browser address bar changes the
- * usable viewport height.
- */
-#stage {
-    position: fixed;
+        background: #000;
+    }
 
-    inset: 0;
+    /*
+     * Full-screen area
+     */
+    .scene {
+		/*
+        position: fixed;
 
-    width: 100vw;
-    height: 100dvh;
+        inset: 0;
 
-    display: grid;
-    place-items: center;
-
-    perspective: 1800px;
-
-    overflow: hidden;
-}
-
-/*
- * A4 portrait card
- *
- * 210 / 297 = 0.70707
- */
-#card {
-    position: relative;
-
-    width: min(100vw, calc(100dvh * 0.70707));
-    height: min(100dvh, calc(100vw * 1.41414));
-
-    aspect-ratio: 210 / 297;
-
-    margin: 0;
-
-    transform-style: preserve-3d;
-
-    transition:
-        transform 1.4s cubic-bezier(.65, .05, .36, 1);
-
-    cursor: pointer;
-}
-
-/*
- * Both sides of invitation
- */
-.face {
-    position: absolute;
-
-    inset: 0;
-
-    width: 100%;
-    height: 100%;
-
-    margin: 0;
-    padding: 0;
-
-    overflow: hidden;
-
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
-}
-
-/*
- * Your actual SVG
- */
-.face img {
-    display: block;
-
-    width: 100%;
-    height: 100%;
-
-    margin: 0;
-    padding: 0;
-
-    object-fit: fill;
-}
-
-/*
- * Front
- */
-.front {
-    transform: rotateY(0deg);
-}
-
-/*
- * Back
- */
-.back {
-    transform: rotateY(180deg);
-}
-
-/*
- * Open
- */
-#card.open {
-    transform: rotateY(180deg);
-}
-
-/*
- * Tap instruction
- */
-#instruction {
-    position: fixed;
-
-    left: 0;
-    bottom: max(16px, env(safe-area-inset-bottom));
-
-    width: 100%;
-
-    text-align: center;
-
-    color: white;
-
-    font-family: Georgia, serif;
-
-    font-size: 13px;
-
-    letter-spacing: .12em;
-
-    text-shadow:
-        0 1px 5px rgba(0,0,0,.7);
-
-    pointer-events: none;
-
-    transition: opacity .5s ease;
-}
-
-#card.open ~ #instruction {
-    opacity: 0;
-}
-
-
-/*
- * Older browsers that don't understand dvh
- */
-@supports not (height: 100dvh) {
-
-    #stage {
+        width: 100vw;
         height: 100vh;
+
+        display: flex;
+
+        justify-content: center;
+        align-items: center;
+
+        perspective: 2000px;
+		*/
+		
+		position: fixed;
+		inset: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
     }
 
-    #card {
+    /*
+     * A4 invitation
+     *
+     * A4 ratio:
+     * 210 / 297 = 0.707
+     */
+    .card {
+        position: relative;
+
         width: min(100vw, 70.707vh);
-        height: min(100vh, 141.414vw);
+        height: min(141.421vw, 100vh);
+
+        aspect-ratio: 210 / 297;
+
+        transform-style: preserve-3d;
+
+        cursor: pointer;
+
+        transition:
+            transform 1.5s cubic-bezier(.65, .05, .36, 1);
     }
 
-}
-
-
-/*
- * Phones in portrait orientation
- */
-@media (orientation: portrait) {
-
-    #card {
-        height: min(100dvh, 141.414vw);
-        width: calc(min(100dvh, 141.414vw) * 0.70707);
+    /*
+     * Open invitation
+     */
+    .card.open {
+        transform: rotateY(180deg);
     }
 
-}
+    /*
+     * Front and back
+     */
+    .face {
+        position: absolute;
 
+        inset: 0;
 
-/*
- * Phones in landscape orientation
- */
-@media (orientation: landscape) {
+        width: 100%;
+        height: 100%;
 
-    #card {
-        width: min(100vw, 70.707dvh);
-        height: calc(min(100vw, 70.707dvh) * 1.41414);
+        overflow: hidden;
+
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
     }
 
-}
+    /*
+     * Front cover
+     */
+    .front {
+        transform: rotateY(0deg);
+    }
+
+    /*
+     * Back / venue details
+     */
+    .back {
+        transform: rotateY(180deg);
+    }
+
+    /*
+     * SVG artwork
+     *
+     * contain = entire A4 artwork remains visible
+     */
+    .face img {
+        display: block;
+
+        width: 100%;
+        height: 100%;
+
+        object-fit: fill;
+
+        object-position: center;
+    }
+
+    /*
+     * Tap instruction
+     */
+    .instruction {
+        position: fixed;
+
+        left: 0;
+        right: 0;
+        bottom: 25px;
+
+        text-align: center;
+
+        color: white;
+
+        font-family: Georgia, serif;
+
+        font-size: 14px;
+
+        letter-spacing: 0.15em;
+
+        text-shadow:
+            0 1px 6px rgba(0,0,0,.7);
+
+        pointer-events: none;
+
+        opacity: .9;
+
+        transition:
+            opacity .5s ease;
+    }
+
+    /*
+     * Hide instruction after opening
+     */
+    .card.open ~ .instruction {
+        opacity: 0;
+    }
+
+    /*
+     * Phones
+     */
+    @media (max-width: 600px) {
+
+        .instruction {
+            bottom: 18px;
+            font-size: 12px;
+        }
+
+    }
+
+    /*
+     * Accessibility
+     */
+    @media (prefers-reduced-motion: reduce) {
+
+        .card {
+            transition: none;
+        }
+
+    }
+
 
 </style>
 </head>
